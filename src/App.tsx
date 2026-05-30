@@ -14,7 +14,7 @@ const RESOLUTIONS = ['360P', '540P', '720P', '1080P']
 const RATIOS = ['16:9', '9:16', '1:1', '4:3', '3:4', '21:9']
 
 export default function App() {
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(5)
   const [mode, setMode] = useState<'templates' | 'ai'>('templates')
   const [topic, setTopic] = useState('')
   const [shots, setShots] = useState<Shot[]>([])
@@ -112,6 +112,7 @@ export default function App() {
             <div className="flex justify-center gap-1 mb-6">
               <button onClick={() => setMode('templates')} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mode === 'templates' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-white'}`}>Templates</button>
               <button onClick={() => setMode('ai')} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mode === 'ai' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-white'}`}>AI Generate</button>
+              <button onClick={() => setStep(5)} className="px-4 py-2 rounded-lg text-sm font-medium text-fuchsia-400 hover:text-fuchsia-300 transition">Demo ▶</button>
             </div>
 
             <div className="max-w-2xl mx-auto">
@@ -215,6 +216,11 @@ export default function App() {
           </div>
         )}
 
+        {/* Step 5: Demo Flow */}
+        {step === 5 && (
+          <DemoFlow onBack={() => setStep(0)} />
+        )}
+
         <p className="mt-12 text-center text-[10px] text-zinc-700">Built with TRAE × PixVerse</p>
       </div>
 
@@ -223,6 +229,69 @@ export default function App() {
           <div className="w-full max-w-3xl px-4" onClick={e=>e.stopPropagation()}><video src={playingVideo} className="w-full rounded-2xl" controls autoPlay playsInline/></div>
         </div>
       )}
+    </div>
+  )
+}
+
+function DemoFlow({ onBack }: { onBack: () => void }) {
+  const [slide, setSlide] = useState(0)
+  const [refImage, setRefImage] = useState<string | null>(null)
+  const [prompt, setPrompt] = useState('')
+  const slides = [
+    { type: 'input', label: 'Input' },
+    { type: 'image', label: 'Storyboard 1 (0-15s)', src: '/videos/storyboard1.png' },
+    { type: 'image', label: 'Storyboard 2 (15-30s)', src: '/videos/storyboard2.png' },
+    { type: 'video', label: 'Video 1 (15s)', src: '/videos/clip1.mp4' },
+    { type: 'video', label: 'Video 2 (15s)', src: '/videos/clip2.mp4' },
+    { type: 'video', label: 'Final Video (30s)', src: '/videos/final.mp4' },
+  ]
+  const current = slides[slide]
+
+  return (
+    <div className="max-w-3xl mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={onBack} className="text-xs text-zinc-500 hover:text-white">← Menu</button>
+        <div className="flex items-center gap-1">
+          {slides.map((_, i) => (
+            <div key={i} className={`w-2 h-2 rounded-full transition ${i === slide ? 'bg-fuchsia-500' : 'bg-zinc-700'}`} />
+          ))}
+        </div>
+        <span className="text-xs text-zinc-500">{slide + 1}/{slides.length}</span>
+      </div>
+
+      <p className="text-center text-sm font-semibold text-zinc-300 mb-4">{current.label}</p>
+
+      <div className="rounded-2xl overflow-hidden border border-zinc-800 bg-[#111] min-h-[400px] flex items-center justify-center transition-all duration-500">
+        {current.type === 'input' && (
+          <div className="w-full p-6">
+            <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
+              <div>
+                <p className="text-xs text-zinc-500 mb-2">Reference Image</p>
+                <label className="block cursor-pointer rounded-xl border border-dashed border-zinc-700 hover:border-fuchsia-500/40 p-4 text-center transition">
+                  {refImage ? <img src={refImage} className="w-full rounded-lg" /> : <span className="text-xs text-zinc-500">Upload ảnh</span>}
+                  <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) setRefImage(URL.createObjectURL(f)) }} />
+                </label>
+              </div>
+              <div>
+                <p className="text-xs text-zinc-500 mb-2">Prompt</p>
+                <textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="Describe your video..." rows={6} className="w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm text-white outline-none resize-none placeholder:text-zinc-600" />
+              </div>
+            </div>
+            <p className="text-center text-[10px] text-zinc-600 mt-4">Bấm Next để xem storyboard được tạo</p>
+          </div>
+        )}
+        {current.type === 'image' && (
+          <img src={current.src} className="w-full h-auto" />
+        )}
+        {current.type === 'video' && (
+          <video src={current.src} className="w-full" controls autoPlay playsInline />
+        )}
+      </div>
+
+      <div className="flex justify-center gap-3 mt-6">
+        <button onClick={() => setSlide(Math.max(0, slide - 1))} disabled={slide === 0} className="rounded-xl border border-zinc-700 px-5 py-2 text-sm text-zinc-400 hover:text-white disabled:opacity-30">Prev</button>
+        <button onClick={() => setSlide(Math.min(slides.length - 1, slide + 1))} disabled={slide === slides.length - 1} className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white px-5 py-2 text-sm font-semibold hover:brightness-110 disabled:opacity-30">Next</button>
+      </div>
     </div>
   )
 }
