@@ -234,64 +234,67 @@ export default function App() {
 }
 
 function DemoFlow({ onBack }: { onBack: () => void }) {
-  const [slide, setSlide] = useState(0)
   const [refImage, setRefImage] = useState<string | null>(null)
   const [prompt, setPrompt] = useState('')
-  const slides = [
-    { type: 'input', label: 'Input' },
-    { type: 'image', label: 'Storyboard 1 (0-15s)', src: '/videos/storyboard1.png' },
-    { type: 'image', label: 'Storyboard 2 (15-30s)', src: '/videos/storyboard2.png' },
-    { type: 'video', label: 'Video 1 (15s)', src: '/videos/clip1.mp4' },
-    { type: 'video', label: 'Video 2 (15s)', src: '/videos/clip2.mp4' },
-    { type: 'video', label: 'Final Video (30s)', src: '/videos/final.mp4' },
-  ]
-  const current = slides[slide]
+  const [generated, setGenerated] = useState(false)
+  const [generating, setGenerating] = useState(false)
+
+  const handleGenerate = () => {
+    setGenerating(true)
+    setTimeout(() => { setGenerating(false); setGenerated(true) }, 2000)
+  }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
+    <div className="max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-8">
         <button onClick={onBack} className="text-xs text-zinc-500 hover:text-white">← Menu</button>
-        <div className="flex items-center gap-1">
-          {slides.map((_, i) => (
-            <div key={i} className={`w-2 h-2 rounded-full transition ${i === slide ? 'bg-fuchsia-500' : 'bg-zinc-700'}`} />
-          ))}
-        </div>
-        <span className="text-xs text-zinc-500">{slide + 1}/{slides.length}</span>
+        <h1 className="text-xl font-bold">Storyboard Video Builder</h1>
+        <span className="text-xs text-zinc-500">PixVerse × TRAE</span>
       </div>
 
-      <p className="text-center text-sm font-semibold text-zinc-300 mb-4">{current.label}</p>
-
-      <div className="rounded-2xl overflow-hidden border border-zinc-800 bg-[#111] min-h-[400px] flex items-center justify-center transition-all duration-500">
-        {current.type === 'input' && (
-          <div className="w-full p-6">
-            <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
-              <div>
-                <p className="text-xs text-zinc-500 mb-2">Reference Image</p>
-                <label className="block cursor-pointer rounded-xl border border-dashed border-zinc-700 hover:border-fuchsia-500/40 p-4 text-center transition">
-                  {refImage ? <img src={refImage} className="w-full rounded-lg" /> : <span className="text-xs text-zinc-500">Upload ảnh</span>}
-                  <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) setRefImage(URL.createObjectURL(f)) }} />
-                </label>
-              </div>
-              <div>
-                <p className="text-xs text-zinc-500 mb-2">Prompt</p>
-                <textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="Describe your video..." rows={6} className="w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm text-white outline-none resize-none placeholder:text-zinc-600" />
-              </div>
-            </div>
-            <p className="text-center text-[10px] text-zinc-600 mt-4">Bấm Next để xem storyboard được tạo</p>
+      {/* Input */}
+      <div className="mb-8">
+        <div className="rounded-2xl border border-zinc-700 bg-[#1a1a1a] p-4">
+          <div className="flex items-start gap-3">
+            <label className="shrink-0 cursor-pointer w-20 h-20 rounded-xl border border-dashed border-zinc-600 hover:border-fuchsia-500/50 flex items-center justify-center overflow-hidden transition">
+              {refImage ? <img src={refImage} className="w-full h-full object-cover" /> : <span className="text-[10px] text-zinc-500 text-center">+ Image</span>}
+              <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) setRefImage(URL.createObjectURL(f)) }} />
+            </label>
+            <textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="Describe your video idea..." rows={2} className="flex-1 bg-transparent text-sm text-white outline-none resize-none placeholder:text-zinc-500" />
           </div>
-        )}
-        {current.type === 'image' && (
-          <img src={current.src} className="w-full h-auto" />
-        )}
-        {current.type === 'video' && (
-          <video src={current.src} className="w-full" controls autoPlay playsInline />
-        )}
+          <div className="flex justify-end mt-3 pt-3 border-t border-zinc-800">
+            <button onClick={handleGenerate} disabled={generating} className="rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2 text-sm font-semibold text-white hover:brightness-110 disabled:opacity-50">
+              {generating ? 'Generating...' : 'Generate'}
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="flex justify-center gap-3 mt-6">
-        <button onClick={() => setSlide(Math.max(0, slide - 1))} disabled={slide === 0} className="rounded-xl border border-zinc-700 px-5 py-2 text-sm text-zinc-400 hover:text-white disabled:opacity-30">Prev</button>
-        <button onClick={() => setSlide(Math.min(slides.length - 1, slide + 1))} disabled={slide === slides.length - 1} className="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white px-5 py-2 text-sm font-semibold hover:brightness-110 disabled:opacity-30">Next</button>
-      </div>
+      {/* Results - show after generate */}
+      {generated && (
+        <div className="space-y-8 animate-[fadeIn_0.8s_ease-out]">
+          <div>
+            <p className="text-xs text-fuchsia-400 font-semibold mb-2">STEP 1 — Storyboard 1 (0-15s)</p>
+            <img src="/videos/storyboard1.png" className="w-full rounded-2xl border border-zinc-800" />
+          </div>
+          <div>
+            <p className="text-xs text-fuchsia-400 font-semibold mb-2">STEP 2 — Storyboard 2 (15-30s)</p>
+            <img src="/videos/storyboard2.png" className="w-full rounded-2xl border border-zinc-800" />
+          </div>
+          <div>
+            <p className="text-xs text-fuchsia-400 font-semibold mb-2">STEP 3 — Video 1 (15s)</p>
+            <video src="/videos/clip1.mp4" className="w-full rounded-2xl border border-zinc-800" controls playsInline />
+          </div>
+          <div>
+            <p className="text-xs text-fuchsia-400 font-semibold mb-2">STEP 4 — Video 2 (15s)</p>
+            <video src="/videos/clip2.mp4" className="w-full rounded-2xl border border-zinc-800" controls playsInline />
+          </div>
+          <div>
+            <p className="text-xs text-fuchsia-400 font-semibold mb-2">STEP 5 — Final Video (30s)</p>
+            <video src="/videos/final.mp4" className="w-full rounded-2xl border border-zinc-800" controls playsInline />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
